@@ -1,0 +1,51 @@
+version: '3.9'
+
+# Local development only — run this to test the app before touching Kubernetes
+# Usage: docker compose up
+#
+# After this works, you will replicate the same in Kubernetes manifests
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB:       taskdb
+      POSTGRES_USER:     taskuser
+      POSTGRES_PASSWORD: taskpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dev:/var/lib/postgresql/data
+      - ./app/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U taskuser"]
+      interval: 5s
+      retries: 5
+
+  backend:
+    # NOTE: You need to write app/backend/Dockerfile first (Day 2 task)
+    build: ./app/backend
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST:     db
+      DB_NAME:     taskdb
+      DB_USER:     taskuser
+      DB_PASSWORD: taskpass
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    # NOTE: You need to write app/frontend/Dockerfile first (Day 2 task)
+    build:
+      context: ./app/frontend
+      args:
+        VITE_API_URL: http://localhost:3000
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres-dev:

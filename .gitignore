@@ -1,0 +1,15 @@
+node_modules/
+coverage/
+dist/
+build/
+.env
+.env.*
+*.pem
+*.key
+*.secret
+kubeconfig
+agent.jar
+istio-*/
+junit.xml
+__pycache__/
+.DS_Store
